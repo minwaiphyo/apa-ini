@@ -1,0 +1,2 @@
+# apa-ini
+MINDS
