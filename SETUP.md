@@ -13,12 +13,12 @@ npm install
 1. Install PostgreSQL locally
 2. Create a database:
 ```sql
-CREATE DATABASE singahomes;
+CREATE DATABASE mindshub;
 ```
 
 3. Update `.env`:
 ```
-DATABASE_URL="postgresql://postgres:password@localhost:5432/singahomes?schema=public"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/mindshub?schema=public"
 ```
 
 ### Option B: Supabase (Recommended for Hackathon)
@@ -52,7 +52,7 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-email@gmail.com"
 SMTP_PASSWORD="your-app-password"
-SMTP_FROM="SingaHomes <noreply@singahomes.com>"
+SMTP_FROM="MindsHub <noreply@mindshub.com>"
 ```
 
 ## 4. Initialize Database

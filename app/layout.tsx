@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "SingaHomes - Unified Activity System",
+  title: "MindsHub - Unified Activity System",
   description: "One unified activity system for participants, volunteers, and staff",
 };
 

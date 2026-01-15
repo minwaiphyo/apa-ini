@@ -24,7 +24,7 @@ export default async function DashboardLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-6">
               <Link href="/" className="text-xl font-bold text-blue-600">
-                SingaHomes
+                MindsHub
               </Link>
               <div className="flex gap-4">
                 <Link

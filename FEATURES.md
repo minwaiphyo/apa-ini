@@ -1,4 +1,4 @@
-# SingaHomes - Feature Summary
+# MindsHub - Feature Summary
 
 ## Core Features Implemented
 

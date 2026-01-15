@@ -83,7 +83,7 @@ export async function sendStaffAlert({
   const recipients = Array.isArray(to) ? to.join(', ') : to
   await sendEmail({
     to: recipients,
-    subject: `[SingaHomes Alert] ${subject}`,
+    subject: `[MindsHub Alert] ${subject}`,
     html: `<h2>${subject}</h2><p>${message}</p>`,
     text: `${subject}\n\n${message}`,
   })

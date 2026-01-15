@@ -1,4 +1,4 @@
-# SingaHomes - Unified Activity System
+# MindsHub - Unified Activity System
 
 A hackathon-winning Next.js 15 application for managing activities, registrations, and volunteers for disability services organizations.
 
