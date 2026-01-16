@@ -90,28 +90,27 @@ model VerificationToken {
 }
 
 model Profile {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  name             String
-  phone            String?
-  membershipTier   MembershipTier @default(AD_HOC)
-  accessibilityNeeds String[] // JSON array stored as string array
-  skills           String[] // For volunteers
-  interests        String[] // For volunteers
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  name               String
+  phone              String?
+  membershipTier     MembershipTier @default(AD_HOC)
+
+  caregiverPhone     String?        // caregiver number
+  medicalStatus      String?        // short summary
+  medicalHistory     String? @db.Text // longer notes/history
+
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  emergencyNotes        String? @db.Text
+
+  accessibilityNeeds String[]
+  skills             String[]
+  interests          String[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Programme {
-  id          String     @id @default(cuid())
-  name        String
-  description String?    @db.Text
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  activities  Activity[]
 }
 
 model Activity {
