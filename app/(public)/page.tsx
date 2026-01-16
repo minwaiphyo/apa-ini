@@ -21,6 +21,12 @@ export default async function HomePage() {
               >
                 Calendar
               </Link>
+              <Link
+                href="/participant"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Participant Page
+              </Link>
               {session ? (
                 <Link
                   href={`/dashboard/${session.user.role.toLowerCase()}`}
