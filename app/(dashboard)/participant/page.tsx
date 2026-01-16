@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 
@@ -7,15 +6,24 @@ type MembershipTier = "AD_HOC" | "ONE_PER_WEEK" | "TWO_PER_WEEK" | "THREE_PLUS_P
 
 type ProfileForm = {
   user: {
-    email: string;     // User.email
-    role: UserRole;    // User.role
+    email: string;
+    role: UserRole;
   };
   profile: {
-    name: string;                  // Profile.name
-    phone?: string;                // Profile.phone
-    membershipTier: MembershipTier;// Profile.membershipTier
-    accessibilityNeeds: string[];  // Profile.accessibilityNeeds
-    // skills/interests exist in schema but usually volunteer-only:
+    name: string;
+    phone?: string;
+    membershipTier: MembershipTier;
+    accessibilityNeeds: string[];
+
+    // ✅ NEW FIELDS (you asked for these)
+    caregiverPhone?: string; // caregiver contact/number
+    medicalStatus?: string;  // short status
+    medicalHistory?: string; // longer notes/history
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    emergencyNotes?: string;
+
+    // existing
     skills: string[];
     interests: string[];
   };
@@ -40,6 +48,15 @@ export default function ParticipantProfilePage() {
       phone: "+6591234567",
       membershipTier: "AD_HOC",
       accessibilityNeeds: ["Wheelchair-friendly", "Quiet space"],
+
+      // ✅ NEW defaults
+      caregiverPhone: "+6598887777",
+      medicalStatus: "Stable",
+      medicalHistory: "Example: Asthma since childhood. Uses inhaler when needed.",
+      emergencyContactName: "Parent/Guardian",
+      emergencyContactPhone: "+6591112222",
+      emergencyNotes: "Example: If unwell, contact caregiver immediately.",
+
       skills: [],
       interests: [],
     },
@@ -116,32 +133,51 @@ export default function ParticipantProfilePage() {
   return (
     <div style={{ maxWidth: 920, margin: "0 auto", padding: 24 }}>
       <h1 style={{ fontSize: 28, fontWeight: 800 }}>Participant Profile</h1>
-      <p style={{ marginTop: 6, opacity: 0.8 }}>
-        This page matches your current Prisma schema (User + Profile).
-      </p>
 
-      {/* Read-only user info */}
+      {/* Account (read-only) */}
       <section style={{ ...sectionStyle, marginTop: 24 }}>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>Account</h2>
+
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>Email</div>
-            <div style={{ fontWeight: 700 }}>{form.user.email}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>Role</div>
-            <div style={{ fontWeight: 700 }}>{form.user.role}</div>
-          </div>
+          <label style={labelStyle}>
+            Email (read-only)
+            <input
+              value={form.user.email}
+              readOnly
+              disabled
+              style={{
+                ...inputStyle,
+                background: "#f5f5f5",
+                cursor: "not-allowed",
+                color: "rgba(0,0,0,0.6)",
+              }}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Role (read-only)
+            <input
+              value={form.user.role}
+              readOnly
+              disabled
+              style={{
+                ...inputStyle,
+                background: "#f5f5f5",
+                cursor: "not-allowed",
+                color: "rgba(0,0,0,0.6)",
+              }}
+            />
+          </label>
         </div>
       </section>
 
-      {/* Profile fields (Profile model) */}
+      {/* Basic info */}
       <section style={sectionStyle}>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>Basic Information</h2>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
           <label style={labelStyle}>
-            Name (Profile.name)
+            Name
             <input
               value={form.profile.name}
               onChange={(e) => updateProfile("name", e.target.value)}
@@ -150,7 +186,7 @@ export default function ParticipantProfilePage() {
           </label>
 
           <label style={labelStyle}>
-            Phone (Profile.phone)
+            Phone
             <input
               value={form.profile.phone ?? ""}
               onChange={(e) => updateProfile("phone", e.target.value || undefined)}
@@ -161,24 +197,28 @@ export default function ParticipantProfilePage() {
         </div>
       </section>
 
-      {/* Membership tier (Profile.membershipTier) */}
+      {/* ✅ Caregiver contact */}
+      <section style={sectionStyle}>
+        <h2 style={{ fontSize: 18, fontWeight: 800 }}>Caregiver Contact</h2>
+
+        <label style={{ ...labelStyle, marginTop: 10 }}>
+          Caregiver phone number
+          <input
+            value={form.profile.caregiverPhone ?? ""}
+            onChange={(e) => updateProfile("caregiverPhone", e.target.value || undefined)}
+            style={inputStyle}
+            placeholder="+6598887777"
+          />
+        </label>
+      </section>
+
+      {/* Membership */}
       <section style={sectionStyle}>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>Membership Tier</h2>
-        <p style={{ marginTop: 6, color: COLORS.textMuted }}>
-          Stored as <code>Profile.membershipTier</code> (enum).
-        </p>
 
         <div style={{ marginTop: 12 }}>
           <div style={{ color: COLORS.mint, fontWeight: 900, fontSize: 18 }}>Cost</div>
-          <div
-            style={{
-              height: 2,
-              background: COLORS.mint,
-              opacity: 0.7,
-              marginTop: 8,
-              borderRadius: 999,
-            }}
-          />
+          <div style={{ height: 2, background: COLORS.mint, opacity: 0.7, marginTop: 8, borderRadius: 999 }} />
         </div>
 
         <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
@@ -189,14 +229,10 @@ export default function ParticipantProfilePage() {
             style={membershipCardStyle(form.profile.membershipTier === "AD_HOC")}
           >
             <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>
-              AdHoc
-              <br />
-              Membership
+              AdHoc<br />Membership
             </div>
             <div style={{ textAlign: "center", fontSize: 18, fontWeight: 800 }}>$10</div>
-            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>
-              /session
-            </div>
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>/session</div>
           </div>
 
           <div
@@ -206,14 +242,10 @@ export default function ParticipantProfilePage() {
             style={membershipCardStyle(form.profile.membershipTier === "ONE_PER_WEEK")}
           >
             <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>
-              Regular
-              <br />
-              Membership
+              Regular<br />Membership
             </div>
             <div style={{ textAlign: "center", fontSize: 18, fontWeight: 800 }}>$150</div>
-            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>
-              per year (example)
-            </div>
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>per year</div>
           </div>
 
           <div
@@ -222,15 +254,8 @@ export default function ParticipantProfilePage() {
             onClick={() => updateProfile("membershipTier", "TWO_PER_WEEK")}
             style={membershipCardStyle(form.profile.membershipTier === "TWO_PER_WEEK")}
           >
-            <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>
-              Two
-              <br />
-              per week
-            </div>
-            <div style={{ textAlign: "center", fontSize: 18, fontWeight: 800 }}>$100</div>
-            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>
-              /10 sessions (example)
-            </div>
+            <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>Two<br />per week</div>
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>(example)</div>
           </div>
 
           <div
@@ -239,29 +264,76 @@ export default function ParticipantProfilePage() {
             onClick={() => updateProfile("membershipTier", "THREE_PLUS_PER_WEEK")}
             style={membershipCardStyle(form.profile.membershipTier === "THREE_PLUS_PER_WEEK")}
           >
-            <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>
-              Three+
-              <br />
-              per week
-            </div>
-            <div style={{ textAlign: "center", fontSize: 18, fontWeight: 800 }}>$25</div>
-            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>
-              /hour (example)
-            </div>
+            <div style={{ textAlign: "center", fontWeight: 900, fontSize: 18 }}>Three+<br />per week</div>
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontWeight: 700 }}>(example)</div>
           </div>
-        </div>
-
-        <div style={{ marginTop: 12, fontFamily: "monospace", opacity: 0.85 }}>
-          membershipTier: "{form.profile.membershipTier}"
         </div>
       </section>
 
-      {/* Accessibility needs (Profile.accessibilityNeeds: String[]) */}
+      {/* ✅ Medical status + history */}
+      <section style={sectionStyle}>
+        <h2 style={{ fontSize: 18, fontWeight: 800 }}>Medical</h2>
+
+        <label style={{ ...labelStyle, marginTop: 10 }}>
+          Medical status (short)
+          <input
+            value={form.profile.medicalStatus ?? ""}
+            onChange={(e) => updateProfile("medicalStatus", e.target.value || undefined)}
+            style={inputStyle}
+            placeholder="e.g., Stable / Requires monitoring"
+          />
+        </label>
+
+        <label style={{ ...labelStyle, marginTop: 12 }}>
+          Medical history (notes)
+          <textarea
+            value={form.profile.medicalHistory ?? ""}
+            onChange={(e) => updateProfile("medicalHistory", e.target.value || undefined)}
+            style={{ ...inputStyle, minHeight: 110 }}
+            placeholder="e.g., asthma, allergies, past incidents, medications..."
+          />
+        </label>
+      </section>
+
+      {/* ✅ Emergency contact */}
+      <section style={sectionStyle}>
+        <h2 style={{ fontSize: 18, fontWeight: 800 }}>Emergency Contact</h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          <label style={labelStyle}>
+            Contact name
+            <input
+              value={form.profile.emergencyContactName ?? ""}
+              onChange={(e) => updateProfile("emergencyContactName", e.target.value || undefined)}
+              style={inputStyle}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Contact phone
+            <input
+              value={form.profile.emergencyContactPhone ?? ""}
+              onChange={(e) => updateProfile("emergencyContactPhone", e.target.value || undefined)}
+              style={inputStyle}
+              placeholder="+65..."
+            />
+          </label>
+        </div>
+
+        <label style={{ ...labelStyle, marginTop: 12 }}>
+          Emergency notes
+          <textarea
+            value={form.profile.emergencyNotes ?? ""}
+            onChange={(e) => updateProfile("emergencyNotes", e.target.value || undefined)}
+            style={{ ...inputStyle, minHeight: 90 }}
+            placeholder="e.g., calming strategies, seizure protocol, who to call first..."
+          />
+        </label>
+      </section>
+
+      {/* Accessibility needs */}
       <section style={sectionStyle}>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>Accessibility Needs</h2>
-        <p style={{ marginTop: 6, color: COLORS.textMuted }}>
-          Stored as <code>Profile.accessibilityNeeds</code> (String[]).
-        </p>
 
         <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
           {form.profile.accessibilityNeeds.map((need) => (
@@ -292,7 +364,6 @@ export default function ParticipantProfilePage() {
                   background: "#fff",
                   fontWeight: 900,
                 }}
-                aria-label={`Remove ${need}`}
               >
                 ×
               </button>
@@ -305,7 +376,7 @@ export default function ParticipantProfilePage() {
             value={needInput}
             onChange={(e) => setNeedInput(e.target.value)}
             style={{ ...inputStyle, flex: 1, marginTop: 0 }}
-            placeholder="Add an accessibility need (e.g., wheelchair-friendly)"
+            placeholder="Add an accessibility need"
             onKeyDown={(e) => e.key === "Enter" && addAccessibilityNeed()}
           />
           <button
@@ -328,7 +399,7 @@ export default function ParticipantProfilePage() {
 
       {/* Debug */}
       <section style={{ ...sectionStyle, borderStyle: "dashed" }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800 }}>Collected Data (Schema-Matched)</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800 }}>Collected Data</h2>
         <pre style={{ whiteSpace: "pre-wrap", marginTop: 10, fontSize: 12 }}>
 {JSON.stringify(form, null, 2)}
         </pre>
