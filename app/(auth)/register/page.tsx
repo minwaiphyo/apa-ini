@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-
-type Role = "PARTICIPANT" | "VOLUNTEER" | "STAFF";
-type MembershipTier = "AD_HOC" | "ONCE_WEEKLY" | "TWICE_WEEKLY" | "THRICE_PLUS";
+import { UserRole as Role, MembershipTier } from "@/lib/types";
 
 export default function RegisterPage() {
   const router = useRouter();
