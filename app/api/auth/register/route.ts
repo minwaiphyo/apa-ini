@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { Role, MembershipTier } from '@prisma/client'
+import { UserRole as Role, MembershipTier } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
-        passwordHash,
+        password: passwordHash,
         role: role as Role || 'PARTICIPANT',
         profile: {
           create: {

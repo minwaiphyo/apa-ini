@@ -104,8 +104,9 @@ export default function RegisterPage() {
         return;
       }
 
-      // Success - redirect to dashboard
-      router.push("/dashboard");
+      // Success - redirect to role-based dashboard
+      const userRole = role.toLowerCase();
+      router.push(`/${userRole}`);
       router.refresh();
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -293,9 +294,11 @@ export default function RegisterPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="AD_HOC">Ad-hoc</option>
-                    <option value="ONCE_WEEKLY">Once per week</option>
-                    <option value="TWICE_WEEKLY">Twice per week</option>
-                    <option value="THRICE_PLUS">3+ times per week</option>
+                    <option value="ONE_PER_WEEK">Once per week</option>
+                    <option value="TWO_PER_WEEK">Twice per week</option>
+                    <option value="THREE_PLUS_PER_WEEK">
+                      3+ times per week
+                    </option>
                   </select>
                 </div>
                 <div>
