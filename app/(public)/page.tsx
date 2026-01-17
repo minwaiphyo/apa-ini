@@ -1,51 +1,11 @@
-import Link from 'next/link'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import Link from "next/link";
+import Navigation from "@/components/Navigation";
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions)
-
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">MindsHub</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/calendar"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Calendar
-              </Link>
-              <Link
-                href="/participant"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Participant Page
-              </Link>
-              {session ? (
-                <Link
-                  href={`/dashboard/${session.user.role.toLowerCase()}`}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-                >
-                  Login
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -54,7 +14,8 @@ export default async function HomePage() {
             One Unified Activity System
           </h2>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            For participants, volunteers, and staff. No more separate sheets, forms, or double bookings.
+            For participants, volunteers, and staff. No more separate sheets,
+            forms, or double bookings.
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
@@ -101,7 +62,8 @@ export default async function HomePage() {
                     Unified Calendar
                   </h3>
                   <p className="mt-5 text-base text-gray-500">
-                    One master calendar for all activities. No more separate sheets or forms.
+                    One master calendar for all activities. No more separate
+                    sheets or forms.
                   </p>
                 </div>
               </div>
@@ -157,7 +119,8 @@ export default async function HomePage() {
                     Smart Registration
                   </h3>
                   <p className="mt-5 text-base text-gray-500">
-                    Dynamic forms with prefill and conditional fields. Caregiver linking supported.
+                    Dynamic forms with prefill and conditional fields. Caregiver
+                    linking supported.
                   </p>
                 </div>
               </div>
@@ -185,7 +148,8 @@ export default async function HomePage() {
                     Conflict Prevention
                   </h3>
                   <p className="mt-5 text-base text-gray-500">
-                    Automatic conflict detection and capacity management at the point of signup.
+                    Automatic conflict detection and capacity management at the
+                    point of signup.
                   </p>
                 </div>
               </div>
@@ -194,5 +158,5 @@ export default async function HomePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

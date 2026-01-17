@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { UserRole } from '@prisma/client'
-import { ConflictBanner } from './ConflictBanner'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { UserRole } from "@prisma/client";
+import { ConflictBanner } from "./ConflictBanner";
 
 interface FormField {
-  id: string
-  key: string
-  label: string
-  type: string
-  required: boolean
-  options?: string | null
-  conditionalLogic?: string | null
+  id: string;
+  key: string;
+  label: string;
+  type: string;
+  required: boolean;
+  options?: string | null;
+  conditionalLogic?: string | null;
 }
 
 interface FormTemplate {
-  id: string
-  fields: FormField[]
+  id: string;
+  fields: FormField[];
 }
 
 interface Activity {
-  id: string
-  title: string
-  startsAt: Date
-  endsAt: Date
-  capacity: number
+  id: string;
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  capacity: number;
 }
 
 interface RegistrationFormProps {
-  activity: Activity
-  formTemplate: FormTemplate | null
-  userId: string
-  userRole: UserRole
+  activity: Activity;
+  formTemplate: FormTemplate | null;
+  userId: string;
+  userRole: UserRole;
 }
 
 export function RegistrationForm({
@@ -41,58 +41,59 @@ export function RegistrationForm({
   userId,
   userRole,
 }: RegistrationFormProps) {
-  const router = useRouter()
-  const [formData, setFormData] = useState<Record<string, any>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState<{
-    title: string
-    startsAt: Date
-    endsAt: Date
-  } | null>(null)
+    title: string;
+    startsAt: Date;
+    endsAt: Date;
+  } | null>(null);
 
   useEffect(() => {
     // Prefill form data (could fetch from profile)
     if (formTemplate) {
-      const initialData: Record<string, any> = {}
+      const initialData: Record<string, any> = {};
       formTemplate.fields.forEach((field) => {
-        if (field.type === 'boolean') {
-          initialData[field.key] = false
-        } else if (field.type === 'select') {
-          initialData[field.key] = ''
+        if (field.type === "boolean") {
+          initialData[field.key] = false;
+        } else if (field.type === "select") {
+          initialData[field.key] = "";
         } else {
-          initialData[field.key] = ''
+          initialData[field.key] = "";
         }
-      })
-      setFormData(initialData)
+      });
+      setFormData(initialData);
     }
-  }, [formTemplate])
+  }, [formTemplate]);
 
-  const visibleFields = formTemplate?.fields.filter((field) => {
-    if (!field.conditionalLogic) return true
-    try {
-      const logic = JSON.parse(field.conditionalLogic)
-      if (logic.showIf) {
-        const { field: conditionField, value: conditionValue } = logic.showIf
-        return formData[conditionField] === conditionValue
+  const visibleFields =
+    formTemplate?.fields.filter((field) => {
+      if (!field.conditionalLogic) return true;
+      try {
+        const logic = JSON.parse(field.conditionalLogic);
+        if (logic.showIf) {
+          const { field: conditionField, value: conditionValue } = logic.showIf;
+          return formData[conditionField] === conditionValue;
+        }
+      } catch (e) {
+        // Invalid JSON, show field
       }
-    } catch (e) {
-      // Invalid JSON, show field
-    }
-    return true
-  }) || []
+      return true;
+    }) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-    setConflict(null)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    setConflict(null);
 
     try {
-      const response = await fetch('/api/registrations', {
-        method: 'POST',
+      const response = await fetch("/api/registrations", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           activityId: activity.id,
@@ -100,9 +101,9 @@ export function RegistrationForm({
           userRole,
           answers: formData,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
         if (data.conflict) {
@@ -110,35 +111,37 @@ export function RegistrationForm({
             title: data.conflict.title,
             startsAt: new Date(data.conflict.startsAt),
             endsAt: new Date(data.conflict.endsAt),
-          })
+          });
         } else {
-          setError(data.error || 'Failed to register')
+          setError(data.error || "Failed to register");
         }
-        setIsSubmitting(false)
-        return
+        setIsSubmitting(false);
+        return;
       }
 
-      router.refresh()
-      router.push(`/dashboard/${userRole.toLowerCase()}`)
+      router.refresh();
+      router.push(`/dashboard/`);
     } catch (err) {
-      setError('An error occurred. Please try again.')
-      setIsSubmitting(false)
+      setError("An error occurred. Please try again.");
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (userRole === 'VOLUNTEER') {
+  if (userRole === "VOLUNTEER") {
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-gray-700 mb-4">Register as a volunteer for this activity.</p>
+        <p className="text-gray-700 mb-4">
+          Register as a volunteer for this activity.
+        </p>
         <button
           type="submit"
           disabled={isSubmitting}
           className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Registering...' : 'Register as Volunteer'}
+          {isSubmitting ? "Registering..." : "Register as Volunteer"}
         </button>
       </form>
-    )
+    );
   }
 
   if (!formTemplate || formTemplate.fields.length === 0) {
@@ -149,10 +152,10 @@ export function RegistrationForm({
           disabled={isSubmitting}
           className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Registering...' : 'Register for Activity'}
+          {isSubmitting ? "Registering..." : "Register for Activity"}
         </button>
       </form>
-    )
+    );
   }
 
   return (
@@ -170,7 +173,9 @@ export function RegistrationForm({
         </div>
       )}
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Registration Form</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        Registration Form
+      </h3>
 
       {visibleFields.map((field) => (
         <div key={field.id}>
@@ -179,7 +184,7 @@ export function RegistrationForm({
             {field.required && <span className="text-red-500 ml-1">*</span>}
           </label>
 
-          {field.type === 'boolean' && (
+          {field.type === "boolean" && (
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -193,10 +198,12 @@ export function RegistrationForm({
             </label>
           )}
 
-          {field.type === 'select' && (
+          {field.type === "select" && (
             <select
-              value={formData[field.key] || ''}
-              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+              value={formData[field.key] || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, [field.key]: e.target.value })
+              }
               required={field.required}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -210,32 +217,41 @@ export function RegistrationForm({
             </select>
           )}
 
-          {(field.type === 'text' || field.type === 'email' || field.type === 'tel') && (
+          {(field.type === "text" ||
+            field.type === "email" ||
+            field.type === "tel") && (
             <input
               type={field.type}
-              value={formData[field.key] || ''}
-              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+              value={formData[field.key] || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, [field.key]: e.target.value })
+              }
               required={field.required}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           )}
 
-          {field.type === 'textarea' && (
+          {field.type === "textarea" && (
             <textarea
-              value={formData[field.key] || ''}
-              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+              value={formData[field.key] || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, [field.key]: e.target.value })
+              }
               required={field.required}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           )}
 
-          {field.type === 'number' && (
+          {field.type === "number" && (
             <input
               type="number"
-              value={formData[field.key] || ''}
+              value={formData[field.key] || ""}
               onChange={(e) =>
-                setFormData({ ...formData, [field.key]: parseFloat(e.target.value) || 0 })
+                setFormData({
+                  ...formData,
+                  [field.key]: parseFloat(e.target.value) || 0,
+                })
               }
               required={field.required}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -249,8 +265,8 @@ export function RegistrationForm({
         disabled={isSubmitting}
         className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
       >
-        {isSubmitting ? 'Registering...' : 'Register for Activity'}
+        {isSubmitting ? "Registering..." : "Register for Activity"}
       </button>
     </form>
-  )
+  );
 }

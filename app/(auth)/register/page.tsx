@@ -99,14 +99,14 @@ export default function RegisterPage() {
       });
 
       if (signInResult?.error) {
+        console.error("Auto-login failed:", signInResult.error);
         // Registration succeeded but login failed - redirect to login
         router.push("/login?registered=true");
         return;
       }
 
       // Success - redirect to role-based dashboard
-      const userRole = role.toLowerCase();
-      router.push(`/${userRole}`);
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       setError("An error occurred. Please try again.");
