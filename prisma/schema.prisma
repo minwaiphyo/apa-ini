@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,216 +10,230 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
+// ============================================
+// AUTH & USERS
+// ============================================
+
+enum Role {
   PARTICIPANT
   VOLUNTEER
   STAFF
 }
 
-enum RegistrationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  WAITLISTED
-}
-
-enum VolunteerAssignmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-}
-
 enum MembershipTier {
-  AD_HOC
-  ONE_PER_WEEK
-  TWO_PER_WEEK
-  THREE_PLUS_PER_WEEK
+  AD_HOC        // Ad-hoc
+  ONCE_WEEKLY   // 1x per week
+  TWICE_WEEKLY  // 2x per week
+  THRICE_PLUS   // 3+ per week
 }
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
+  passwordHash  String
+  role          Role      @default(PARTICIPANT)
   emailVerified DateTime?
-  password      String?   // hashed
-  role          UserRole  @default(PARTICIPANT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  profile       Profile?
-  accounts      Account[]
-  sessions      Session[]
-  registrations Registration[]
-  assignments   VolunteerAssignment[]
-  caregiverLinks CaregiverLink[] @relation("Caregiver")
-  participantLinks CaregiverLink[] @relation("Participant")
-}
+  // Relations
+  profile              Profile?
+  registrations        Registration[]
+  volunteerAssignments VolunteerAssignment[]
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
+  @@index([email])
+  @@index([role])
 }
 
 model Profile {
-  id                 String   @id @default(cuid())
-  userId             String   @unique
+  id                 String          @id @default(cuid())
+  userId             String          @unique
   name               String
   phone              String?
-  membershipTier     MembershipTier @default(AD_HOC)
-
-  caregiverPhone     String?        // caregiver number
-  medicalStatus      String?        // short summary
-  medicalHistory     String? @db.Text // longer notes/history
-
-  emergencyContactName  String?
-  emergencyContactPhone String?
-  emergencyNotes        String? @db.Text
-
-  accessibilityNeeds String[]
-  skills             String[]
-  interests          String[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  
+  // PARTICIPANT-SPECIFIC FIELDS (required if user.role == PARTICIPANT)
+  membershipTier     MembershipTier? // Required for participants
+  caregiverName      String?         // Required for participants
+  caregiverPhone     String?         // Required for participants - used to send event info
+  accessibilityNeeds String[]        // e.g. ["wheelchair", "hearing_aid"]
+  
+  // VOLUNTEER-SPECIFIC FIELDS
+  skills             String[]        // For volunteers
+  interests          String[]        // For volunteers
+  
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// PROGRAMMES & ACTIVITIES
+// ============================================
+
+model Programme {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activities Activity[]
+
+  @@index([name])
+}
+
+enum ActivityType {
+  STEP          // Social, Therapeutic, Educational Programme
+  WELLNESS
+  RECREATION
+  EDUCATION
+  SOCIAL
+  OTHER
 }
 
 model Activity {
-  id                String   @id @default(cuid())
-  title             String
-  description       String?  @db.Text
-  programmeId       String
-  startsAt          DateTime
-  endsAt            DateTime
-  location          String
-  capacity          Int      @default(20)
-  volunteerRequired Int      @default(0) // Number of volunteers needed
-  volunteerRatio    Float    @default(5.0) // participants per volunteer
-  tags              String[] // Activity type tags
-  accessibilityTags String[] // Wheelchair-friendly, etc.
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                  String       @id @default(cuid())
+  title               String
+  description         String?
+  programmeId         String
+  type                ActivityType @default(OTHER)
+  startsAt            DateTime
+  endsAt              DateTime
+  location            String
+  capacity            Int // Max participants
+  volunteerRequired   Int          @default(0) // Min volunteers needed
+  participantToVolunteerRatio Float? // e.g. 3.0 means 1 volunteer per 3 participants
+  accessibilityTags   String[] // e.g. ["wheelchair_friendly", "hearing_loop"]
+  tags                String[] // General tags
+  imageUrl            String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  programme         Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
-  registrations     Registration[]
-  assignments       VolunteerAssignment[]
-  formTemplate      FormTemplate?
+  programme            Programme             @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  registrations        Registration[]
+  volunteerAssignments VolunteerAssignment[]
+  formTemplate         FormTemplate?
+
+  @@index([startsAt])
+  @@index([programmeId])
+  @@index([type])
+}
+
+// ============================================
+// REGISTRATIONS (Participants)
+// ============================================
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  WAITLIST
 }
 
 model Registration {
-  id         String             @id @default(cuid())
-  activityId String
+  id            String             @id @default(cuid())
+  activityId    String
   participantId String
-  status     RegistrationStatus @default(PENDING)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  status        RegistrationStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
-  activity   Activity            @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  participant User               @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  answers    RegistrationAnswer[]
+  activity    Activity             @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  participant User                 @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  answers     RegistrationAnswer[]
 
   @@unique([activityId, participantId])
   @@index([participantId])
   @@index([activityId])
+  @@index([status])
+}
+
+// ============================================
+// VOLUNTEER ASSIGNMENTS
+// ============================================
+
+enum AssignmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 model VolunteerAssignment {
-  id         String                    @id @default(cuid())
-  activityId String
+  id          String           @id @default(cuid())
+  activityId  String
   volunteerId String
-  status     VolunteerAssignmentStatus @default(PENDING)
-  createdAt  DateTime                  @default(now())
-  updatedAt  DateTime                  @updatedAt
+  status      AssignmentStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  activity   Activity                  @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  volunteer  User                      @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  activity  Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  volunteer User     @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
 
   @@unique([activityId, volunteerId])
   @@index([volunteerId])
   @@index([activityId])
+  @@index([status])
 }
 
-model CaregiverLink {
-  id                String   @id @default(cuid())
-  caregiverUserId   String
-  participantUserId String
-  createdAt         DateTime @default(now())
-
-  caregiver         User     @relation("Caregiver", fields: [caregiverUserId], references: [id], onDelete: Cascade)
-  participant       User     @relation("Participant", fields: [participantUserId], references: [id], onDelete: Cascade)
-
-  @@unique([caregiverUserId, participantUserId])
-  @@index([caregiverUserId])
-  @@index([participantUserId])
-}
+// ============================================
+// DYNAMIC FORMS
+// ============================================
 
 model FormTemplate {
-  id         String      @id @default(cuid())
-  activityId String      @unique
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id         String   @id @default(cuid())
+  activityId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  activity   Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  fields     FormField[]
+  activity Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  fields   FormField[]
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  BOOLEAN
+  SELECT
+  MULTISELECT
+  DATE
 }
 
 model FormField {
-  id                String   @id @default(cuid())
-  templateId        String
-  key               String   // e.g., "wheelchair_access", "caregiver_attending"
-  label             String
-  type              String   // "text", "boolean", "select", "number", etc.
-  required          Boolean  @default(false)
-  options           String?  @db.Text // JSON array for select options
-  conditionalLogic  String?  @db.Text // JSON: { showIf: { field: "key", value: true } }
-  order             Int      @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  templateId           String
+  key                  String // e.g. "wheelchair_needed"
+  label                String // e.g. "Do you need wheelchair access?"
+  type                 FieldType
+  required             Boolean   @default(false)
+  options              String[] // For SELECT/MULTISELECT
+  conditionalLogicJson String? // JSON: { "showIf": { "field": "other_key", "value": true } }
+  order                Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  template          FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  answers           RegistrationAnswer[]
+  template FormTemplate        @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  answers  RegistrationAnswer[]
 
   @@index([templateId])
+  @@index([order])
 }
 
 model RegistrationAnswer {
   id             String   @id @default(cuid())
   registrationId String
   fieldId        String
-  valueJson      String   @db.Text // Store any value as JSON
+  valueJson      String // Store answer as JSON string
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
-  field          FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  field        FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@unique([registrationId, fieldId])
   @@index([registrationId])
