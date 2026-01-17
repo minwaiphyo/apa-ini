@@ -34,3 +34,4 @@ export type ProfileForm = {
     interests: string[]
   }
 }
+
