@@ -1,12 +1,13 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
-import { UserRole } from '@prisma/client'
+import { Role } from '@prisma/client'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  // Don't use PrismaAdapter with CredentialsProvider - they conflict
+  // adapter: PrismaAdapter(prisma) as any, // ❌ Remove this
+  
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -21,13 +22,18 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          include: { profile: true }, // Include profile for future use
         })
 
-        if (!user || !user.password) {
+        // Changed from user.password to user.passwordHash to match schema
+        if (!user || !user.passwordHash) {
           return null
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password)
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.passwordHash // ✅ Matches schema field
+        )
 
         if (!isValid) {
           return null
@@ -37,13 +43,16 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           role: user.role,
+          name: user.profile?.name, // Optional: include name from profile
         }
       },
     }),
   ],
+  
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt', // ✅ Required when using CredentialsProvider
   },
+  
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -54,34 +63,40 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role as UserRole
+        session.user.role = token.role as Role
         session.user.id = token.id as string
       }
       return session
     },
   },
+  
   pages: {
     signIn: '/login',
+    // Optional: add more custom pages
+    // signUp: '/register',
+    // error: '/auth/error',
   },
 }
 
+// TypeScript module augmentation
 declare module 'next-auth' {
   interface Session {
     user: {
       id: string
       email: string
-      role: UserRole
+      role: Role
+      name?: string | null
     }
   }
 
   interface User {
-    role: UserRole
+    role: Role
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    role: UserRole
+    role: Role
     id: string
   }
 }

@@ -1,33 +1,8 @@
 "use client";
 import React from "react";
+import { UserRole, MembershipTier, ProfileForm } from "@/lib/types";
 
-type UserRole = "PARTICIPANT" | "VOLUNTEER" | "STAFF";
-type MembershipTier = "AD_HOC" | "ONE_PER_WEEK" | "TWO_PER_WEEK" | "THREE_PLUS_PER_WEEK";
 
-type ProfileForm = {
-  user: {
-    email: string;
-    role: UserRole;
-  };
-  profile: {
-    name: string;
-    phone?: string;
-    membershipTier: MembershipTier;
-    accessibilityNeeds: string[];
-
-    // ✅ NEW FIELDS (you asked for these)
-    caregiverPhone?: string; // caregiver contact/number
-    medicalStatus?: string;  // short status
-    medicalHistory?: string; // longer notes/history
-    emergencyContactName?: string;
-    emergencyContactPhone?: string;
-    emergencyNotes?: string;
-
-    // existing
-    skills: string[];
-    interests: string[];
-  };
-};
 
 const COLORS = {
   mint: "#8FD3C8",
